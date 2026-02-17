@@ -8,6 +8,7 @@ entity imem_tb is
 end;
 
 architecture arch of imem_tb is
+    constant MEMFILE: string := "programs/simple.mif";
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
     signal clk : std_logic;
@@ -21,6 +22,7 @@ architecture arch of imem_tb is
 begin
     dut: entity work.imem
     generic map (
+        MEMFILE => MEMFILE,
         ADDR_WIDTH => ADDR_WIDTH,
         DATA_WIDTH => DATA_WIDTH
     )
