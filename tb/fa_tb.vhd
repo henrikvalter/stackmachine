@@ -22,18 +22,22 @@ begin
     );
 
     stimulus_process: process
-        variable expected : integer;
+        variable inputs : unsigned(2 downto 0);
+        variable expected_i : integer;
+        variable expected_vec : unsigned(1 downto 0);
         variable expected_s : std_logic;
         variable expected_cout : std_logic;
     begin
         for i in 0 to 7 loop
             report "test " & integer'image(i) severity note;
-            a   <= '1' when 1=((i/4) mod 2) else '0';
-            b   <= '1' when 1=((i/2) mod 2) else '0';
-            cin <= '1' when 1=(i mod 2) else '0';
-            expected := ((i/4) mod 2) + ((i/2) mod 2) + (i mod 2);
-            expected_s := '1' when 1=(expected mod 2) else '0';
-            expected_cout := '1' when 1=(expected / 2) else '0';
+            inputs := to_unsigned(i, 3);
+            a <= inputs(2);
+            b <= inputs(1);
+            cin <= inputs(0);
+            expected_i := ((i/4) mod 2) + ((i/2) mod 2) + (i mod 2);
+            expected_vec := to_unsigned(expected_i, 2);
+            expected_cout := expected_vec(1);
+            expected_s := expected_vec(0);
             wait for 1 ns;
             assert s = expected_s
                 report "Sum mismatch (" &
