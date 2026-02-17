@@ -8,7 +8,9 @@ package mypkg is
     -- constant ADDER_SUB : std_logic := '1';
 
     type adder_op_t is (ADDER_ADD, ADDER_SUB);
-    type mem_op_t is (MEM_READ, MEM_WRITE);
 
+    type mem_op_t is (MEM_READ, MEM_WRITE);
+    
+    type stack_op_t is (STACK_PEEK, STACK_POP, STACK_PUSH);
 
 end package;

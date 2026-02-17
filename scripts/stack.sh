@@ -1,11 +1,14 @@
 #!/bin/bash
 
-UNIT="mem"
+UNIT="stack"
 
 BUILDDIR="build"
 mkdir -p ${BUILDDIR}
 
 ghdl analyze   --std=08 --workdir=${BUILDDIR} src/mypkg.vhd
+ghdl analyze   --std=08 --workdir=${BUILDDIR} src/fa.vhd
+ghdl analyze   --std=08 --workdir=${BUILDDIR} src/adder.vhd
+ghdl analyze   --std=08 --workdir=${BUILDDIR} src/memarray.vhd
 ghdl analyze   --std=08 --workdir=${BUILDDIR} src/${UNIT}.vhd
 ghdl analyze   --std=08 --workdir=${BUILDDIR} tb/${UNIT}_tb.vhd
 ghdl elaborate --std=08 --workdir=${BUILDDIR} ${UNIT}_tb
@@ -13,3 +16,4 @@ ghdl run       --std=08 --workdir=${BUILDDIR} ${UNIT}_tb --vcd=${BUILDDIR}/wave.
 gtkwave ${BUILDDIR}/wave.vcd
 rm ${UNIT}_tb
 rm e~${UNIT}_tb.o
+rm build/*

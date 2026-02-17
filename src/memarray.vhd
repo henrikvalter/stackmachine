@@ -4,7 +4,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.mypkg.all;
 
-entity mem is
+entity memarray is
     generic (
         ADDR_WIDTH: natural := 8;
         DATA_WIDTH: natural := 32
@@ -20,7 +20,7 @@ entity mem is
     );
 end;
 
-architecture arch of mem is
+architecture arch of memarray is
     constant MEM_DEPTH : natural := 2**ADDR_WIDTH;
     type memory_array_t is array (0 to MEM_DEPTH-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
     signal memory: memory_array_t;

@@ -4,10 +4,10 @@ use ieee.numeric_std.all;
 use work.mypkg.all;
 use ieee.math_real.all;
 
-entity mem_tb is
+entity memarray_tb is
 end;
 
-architecture arch of mem_tb is
+architecture arch of memarray_tb is
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
     signal clk : std_logic;
@@ -18,7 +18,7 @@ architecture arch of mem_tb is
     signal enable : std_logic;
     signal data_out : std_logic_vector(DATA_WIDTH-1 downto 0);
 begin
-    dut: entity work.mem
+    dut: entity work.memarray
     generic map (
         ADDR_WIDTH => ADDR_WIDTH,
         DATA_WIDTH => DATA_WIDTH
