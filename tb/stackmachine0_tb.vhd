@@ -8,13 +8,15 @@ entity stackmachine0_tb is
 end;
 
 architecture arch of stackmachine0_tb is
-    constant MEMFILE: string := "programs/simple.mif";
+    constant MEMFILE: string := "programs/iadd.mif";
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
 
     signal clk: std_logic;
     signal reset: std_logic;
     signal data_out: std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal data_out_valid: std_logic;
+    signal state_o: stackmachine_state_t;
 begin
     dut: entity work.stackmachine0
     generic map (
@@ -25,10 +27,40 @@ begin
     port map (
         clk => clk,
         reset => reset,
-        data_out => data_out
+        data_out => data_out,
+        data_out_valid => data_out_valid,
+        state_o => state_o
     );
     stimulus_process: process
     begin
+        clk <= '0'; 
+        reset <= '1';
+        wait for 1 ns;
+        -- Rising edge
+        clk <= '1'; 
+        wait for 1 ns;
+        -- Falling edge
+        clk <= '0'; 
+        reset <= '0';
+
+        for i in 1 to 10 loop
+
+            wait for 1 ns;
+            clk <= '1';
+            wait for 1 ns;
+            clk <= '0';
+
+            wait for 1 ns;
+            clk <= '1';
+            wait for 1 ns;
+            clk <= '0';
+
+            wait for 1 ns;
+            clk <= '1';
+            wait for 1 ns;
+            clk <= '0';
+
+        end loop;
         report "Simulation finished."
             severity note;
         wait;

@@ -5,18 +5,31 @@ use work.mypkg.all;
 
 entity stackmachine0 is
     generic (
-        MEMFILE: string := "programs/simple.mif";
+        MEMFILE: string := "programs/empty.mif";
         ADDR_WIDTH: natural := 8;
         DATA_WIDTH: natural := 32
     );
     port (
         clk : in std_logic;
         reset : in std_logic;
-        data_out : out std_logic_vector(DATA_WIDTH-1 downto 0)
+        data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
+        data_out_valid : out std_logic;
+        state_o : out stackmachine_state_t   
     );
 end;
 
 architecture arch of stackmachine0 is
+    -- Internals
+    signal pc : std_logic_vector(ADDR_WIDTH-1 downto 0);
+    signal state : stackmachine_state_t;
+    signal saved_imem_offset0 : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal saved_imem_offset1 : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal saved_imem_offset2 : std_logic_vector(DATA_WIDTH-1 downto 0);
+    signal saved_imem_offset3 : std_logic_vector(DATA_WIDTH-1 downto 0);
+
+    signal pop_value_m1 : std_logic_vector(31 downto 0);
+    signal pop_value_m2 : std_logic_vector(31 downto 0);
+
     -- Stack in
     signal stack_data_in : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal stack_op : stack_op_t;
@@ -26,7 +39,6 @@ architecture arch of stackmachine0 is
     signal stack_error : std_logic;
 
     -- Imem in
-    signal imem_address : std_logic_vector(ADDR_WIDTH-1 downto 0);
     signal imem_enable : std_logic;
     -- Imem out
     signal imem_data_out_offset0 : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -34,10 +46,25 @@ architecture arch of stackmachine0 is
     signal imem_data_out_offset2 : std_logic_vector(DATA_WIDTH-1 downto 0);
     signal imem_data_out_offset3 : std_logic_vector(DATA_WIDTH-1 downto 0);
 
-    signal pc : std_logic_vector(ADDR_WIDTH-1 downto 0) := (others => '0');
-    signal curr_instruction : std_logic_vector(31 downto 0);
-    signal state : stackmachine_state_t := STATE_INIT;
+    -- main adder
+    signal main_adder_a : std_logic_vector(31 downto 0);
+    signal main_adder_b : std_logic_vector(31 downto 0);
+    signal main_adder_op : adder_op_t;
+    signal main_adder_sum : std_logic_vector(31 downto 0);
+
+    -- -- pcadder in
+    -- signal pcadder_in : std_logic_vector(31 downto 0);
+    -- -- pcadder sum
+    -- signal pcadder_out : std_logic_vector(31 downto 0);
 begin
+    main_adder: entity work.adder(rca)
+        generic map(WIDTH => 32)
+        port map (a => main_adder_a, b => main_adder_b, op => main_adder_op, s => main_adder_sum, cout => open);
+
+    -- pcadder: entity work.adder(rca)
+    --     generic map(WIDTH => 32)
+    --     port map (a => pc, b => pcadder_in, op => ADDER_ADD, s => pcadder_sum, cout => open);
+
     stack: entity work.stack
     generic map (
         ADDR_WIDTH => ADDR_WIDTH,
@@ -52,6 +79,7 @@ begin
         data_out => stack_data_out,
         stack_error => stack_error
     );
+
     imem: entity work.imem
     generic map (
         MEMFILE => MEMFILE,
@@ -61,7 +89,7 @@ begin
     port map (
         clk => clk,
         reset => reset,
-        address => imem_address,
+        address => pc,
         enable => imem_enable,
         data_out_offset0 => imem_data_out_offset0,
         data_out_offset1 => imem_data_out_offset1,
@@ -69,19 +97,201 @@ begin
         data_out_offset3 => imem_data_out_offset3
     );
 
-    process (clk)
-        begin
-        if rising_edge(clk) then
-            -- if reset = '1' then
-            --     data_out <= (others => '0');
-            --     pc <= (others => '0');
-            --     curr_instruction <= (others => '0');
-            --     state <= state_init;
-            -- end if;
+    process (all) begin
+        state_o <= state;
+        if state = STATE_INIT then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_FETCH then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '1';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_DECODE then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        -- OP_EMPTY
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EMPTY then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        -- OP_IPUSH
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPUSH then
+            stack_data_in <= saved_imem_offset1;
+            stack_op <= STACK_PUSH;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        -- OP_IADD
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IADD then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IADD then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_IADD then
+            stack_data_in <= main_adder_sum;
+            stack_op <= STACK_PUSH;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= pop_value_m2;
+            main_adder_b <= pop_value_m1;
+            main_adder_op <= ADDER_ADD;
+        end if;
+    end process;
 
-            -- else
-            --     data_out <= (others => '0');
-            -- end if;
+    process (clk) begin
+        if rising_edge(clk) then
+            if reset = '1' then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= (others => '0');
+                state <= STATE_INIT;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_INIT then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= (others => '0');
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_FETCH then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_DECODE;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_DECODE then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals: save imem read
+                pc <= pc;
+                state <= STATE_EXEC1;
+                saved_imem_offset0 <= imem_data_out_offset0;
+                saved_imem_offset1 <= imem_data_out_offset1;
+                saved_imem_offset2 <= imem_data_out_offset2;
+                saved_imem_offset3 <= imem_data_out_offset3;
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_EMPTY
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EMPTY then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= std_logic_vector(signed(pc) + 1);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_IPUSH
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPUSH then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= std_logic_vector(signed(pc) + 2);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_IADD
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IADD then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC2;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= stack_data_out;
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IADD then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC3;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= pop_value_m1;
+                pop_value_m2 <= stack_data_out;
+            elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_IADD then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= std_logic_vector(signed(pc) + 1);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            end if;
         end if;
     end process;
 end;

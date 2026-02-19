@@ -57,6 +57,7 @@ begin
         begin
         if rising_edge(clk) then
             if reset = '1' then
+                memory <= init_memory_wfile(MEMFILE);
                 -- memory <= (others => (others => '0'));
                 data_out_offset0 <= (others => '0');
                 data_out_offset1 <= (others => '0');
