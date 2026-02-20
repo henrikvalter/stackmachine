@@ -8,7 +8,7 @@ entity stackmachine0_tb is
 end;
 
 architecture arch of stackmachine0_tb is
-    constant MEMFILE: string := "programs/branch.mif";
+    constant MEMFILE: string := "programs/dup.mif";
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
 

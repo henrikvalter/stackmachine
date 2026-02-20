@@ -192,6 +192,23 @@ begin
             main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
             main_adder_b <= saved_imem_offset1;
             main_adder_op <= ADDER_ADD;
+        -- OP_DUP
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_DUP then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_DUP then
+            stack_data_in <= stack_data_out;
+            stack_op <= STACK_PUSH;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
         end if;
     end process;
 
@@ -352,6 +369,33 @@ begin
                 data_out_valid <= '0';
                 -- internals
                 pc <= main_adder_sum(ADDR_WIDTH-1 downto 0);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_DUP
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_DUP then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC2;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_DUP then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= std_logic_vector(signed(pc) + 1);
                 state <= STATE_FETCH;
                 saved_imem_offset0 <= (others => '0');
                 saved_imem_offset1 <= (others => '0');
