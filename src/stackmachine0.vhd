@@ -6,7 +6,7 @@ use work.mypkg.all;
 entity stackmachine0 is
     generic (
         MEMFILE: string := "programs/empty.mif";
-        ADDR_WIDTH: natural := 8;
+        ADDR_WIDTH: natural := 12;
         DATA_WIDTH: natural := 32
     );
     port (
@@ -209,6 +209,56 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+        -- OP_BRANCH_IF_EQUAL
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
+            main_adder_b <= saved_imem_offset1;
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= stack_data_out;
+            main_adder_b <= pop_value_m1;
+            main_adder_op <= ADDER_SUB;
+        -- OP_BRANCH_IF_NOT_EQUAL
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
+            main_adder_b <= saved_imem_offset1;
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= stack_data_out;
+            main_adder_b <= pop_value_m1;
+            main_adder_op <= ADDER_SUB;
         end if;
     end process;
 
@@ -396,6 +446,92 @@ begin
                 data_out_valid <= '0';
                 -- internals
                 pc <= std_logic_vector(signed(pc) + 1);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC2;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= main_adder_sum;
+            elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC3;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= stack_data_out;
+                pop_value_m2 <= pop_value_m2;
+            elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                if main_adder_sum = std_logic_vector(to_unsigned(0,32)) then
+                    pc <= pop_value_m2(ADDR_WIDTH-1 downto 0);
+                else
+                    pc <= std_logic_vector(signed(pc) + 1);
+                end if;
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC2;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= main_adder_sum;
+            elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC3;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= stack_data_out;
+                pop_value_m2 <= pop_value_m2;
+            elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                if main_adder_sum /= std_logic_vector(to_unsigned(0,32)) then
+                    pc <= pop_value_m2(ADDR_WIDTH-1 downto 0);
+                else
+                    pc <= std_logic_vector(signed(pc) + 1);
+                end if;
                 state <= STATE_FETCH;
                 saved_imem_offset0 <= (others => '0');
                 saved_imem_offset1 <= (others => '0');
