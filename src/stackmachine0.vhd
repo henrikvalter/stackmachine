@@ -14,7 +14,7 @@ entity stackmachine0 is
         reset : in std_logic;
         data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
         data_out_valid : out std_logic;
-        state_o : out stackmachine_state_t   
+        exit_flag : out std_logic
     );
 end;
 
@@ -98,7 +98,6 @@ begin
     );
 
     process (all) begin
-        state_o <= state;
         if state = STATE_INIT then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -107,6 +106,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_FETCH then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -115,6 +115,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_DECODE then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -123,6 +124,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_EMPTY
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EMPTY then
             stack_data_in <= (others => '0');
@@ -132,6 +134,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_IPUSH
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPUSH then
             stack_data_in <= saved_imem_offset1;
@@ -141,6 +144,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_IADD
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IADD then
             stack_data_in <= (others => '0');
@@ -150,6 +154,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IADD then
             stack_data_in <= (others => '0');
             stack_op <= STACK_POP;
@@ -158,6 +163,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_IADD then
             stack_data_in <= main_adder_sum;
             stack_op <= STACK_PUSH;
@@ -166,6 +172,7 @@ begin
             main_adder_a <= stack_data_out;
             main_adder_b <= pop_value_m1;
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_IPRINT
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPRINT then
             stack_data_in <= (others => '0');
@@ -175,6 +182,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IPRINT then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -183,6 +191,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_BRANCH
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH then
             stack_data_in <= (others => '0');
@@ -192,6 +201,7 @@ begin
             main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
             main_adder_b <= saved_imem_offset1;
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_DUP
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_DUP then
             stack_data_in <= (others => '0');
@@ -201,6 +211,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_DUP then
             stack_data_in <= stack_data_out;
             stack_op <= STACK_PUSH;
@@ -209,6 +220,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         -- OP_BRANCH_IF_EQUAL
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
             stack_data_in <= (others => '0');
@@ -218,6 +230,7 @@ begin
             main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
             main_adder_b <= saved_imem_offset1;
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
             stack_data_in <= (others => '0');
             stack_op <= STACK_POP;
@@ -226,6 +239,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_EQUAL then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -234,6 +248,7 @@ begin
             main_adder_a <= stack_data_out;
             main_adder_b <= pop_value_m1;
             main_adder_op <= ADDER_SUB;
+            exit_flag <= '0';
         -- OP_BRANCH_IF_NOT_EQUAL
         elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
             stack_data_in <= (others => '0');
@@ -243,6 +258,7 @@ begin
             main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
             main_adder_b <= saved_imem_offset1;
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
             stack_data_in <= (others => '0');
             stack_op <= STACK_POP;
@@ -251,6 +267,7 @@ begin
             main_adder_a <= (others => '0');
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
+            exit_flag <= '0';
         elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_BRANCH_IF_NOT_EQUAL then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
@@ -259,6 +276,17 @@ begin
             main_adder_a <= stack_data_out;
             main_adder_b <= pop_value_m1;
             main_adder_op <= ADDER_SUB;
+            exit_flag <= '0';
+        -- OP_EXIT
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EXIT then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+            exit_flag <= '1';
         end if;
     end process;
 
@@ -487,7 +515,7 @@ begin
                 if main_adder_sum = std_logic_vector(to_unsigned(0,32)) then
                     pc <= pop_value_m2(ADDR_WIDTH-1 downto 0);
                 else
-                    pc <= std_logic_vector(signed(pc) + 1);
+                    pc <= std_logic_vector(signed(pc) + 2);
                 end if;
                 state <= STATE_FETCH;
                 saved_imem_offset0 <= (others => '0');
@@ -530,13 +558,27 @@ begin
                 if main_adder_sum /= std_logic_vector(to_unsigned(0,32)) then
                     pc <= pop_value_m2(ADDR_WIDTH-1 downto 0);
                 else
-                    pc <= std_logic_vector(signed(pc) + 1);
+                    pc <= std_logic_vector(signed(pc) + 2);
                 end if;
                 state <= STATE_FETCH;
                 saved_imem_offset0 <= (others => '0');
                 saved_imem_offset1 <= (others => '0');
                 saved_imem_offset2 <= (others => '0');
                 saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_EXIT
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EXIT then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC1;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
                 pop_value_m1 <= (others => '0');
                 pop_value_m2 <= (others => '0');
             end if;

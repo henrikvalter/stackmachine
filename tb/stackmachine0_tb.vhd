@@ -8,7 +8,7 @@ entity stackmachine0_tb is
 end;
 
 architecture arch of stackmachine0_tb is
-    constant MEMFILE: string := "programs/branch_if_not_equal_false.mif";
+    constant MEMFILE: string := "programs/count_to_100.mif";
     constant ADDR_WIDTH: natural := 12;
     constant DATA_WIDTH: natural := 32;
 
@@ -16,7 +16,7 @@ architecture arch of stackmachine0_tb is
     signal reset: std_logic;
     signal data_out: std_logic_vector(DATA_WIDTH-1 downto 0);
     signal data_out_valid: std_logic;
-    signal state_o: stackmachine_state_t;
+    signal exit_flag: std_logic;
 begin
     dut: entity work.stackmachine0
     generic map (
@@ -29,7 +29,7 @@ begin
         reset => reset,
         data_out => data_out,
         data_out_valid => data_out_valid,
-        state_o => state_o
+        exit_flag => exit_flag
     );
     stimulus_process: process
     begin
@@ -43,16 +43,22 @@ begin
         clk <= '0'; 
         reset <= '0';
 
-        for i in 1 to 100 loop
+        for i in 1 to 10000 loop
 
             wait for 1 ns;
             clk <= '1';
             wait for 1 ns;
             clk <= '0';
 
+            if exit_flag = '1' then
+                report "Exit signal detected. Simulation finished."
+                severity note;
+                wait;
+            end if;
+
         end loop;
-        report "Simulation finished."
-            severity note;
+        report "Simulation timeout."
+            severity failure;
         wait;
     end process;
 end;
