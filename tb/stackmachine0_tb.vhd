@@ -8,7 +8,7 @@ entity stackmachine0_tb is
 end;
 
 architecture arch of stackmachine0_tb is
-    constant MEMFILE: string := "programs/iadd.mif";
+    constant MEMFILE: string := "programs/branch.mif";
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
 
@@ -43,17 +43,7 @@ begin
         clk <= '0'; 
         reset <= '0';
 
-        for i in 1 to 10 loop
-
-            wait for 1 ns;
-            clk <= '1';
-            wait for 1 ns;
-            clk <= '0';
-
-            wait for 1 ns;
-            clk <= '1';
-            wait for 1 ns;
-            clk <= '0';
+        for i in 1 to 100 loop
 
             wait for 1 ns;
             clk <= '1';

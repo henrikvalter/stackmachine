@@ -18,7 +18,8 @@ package mypkg is
     constant OP_EMPTY     : instruction_t := x"00000000";
     constant OP_IPUSH     : instruction_t := x"00000001";
     constant OP_IADD      : instruction_t := x"00000002";
-    constant OP_PRINTINT  : instruction_t := x"00000003";
+    constant OP_IPRINT    : instruction_t := x"00000003";
+    constant OP_BRANCH    : instruction_t := x"00000004";
 
     type stackmachine_state_t is (
         STATE_INIT,

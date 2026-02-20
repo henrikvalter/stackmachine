@@ -1,7 +1,0 @@
-
-A VHDL module consists of an entity and at least one architecture.
-
-Intermediate signal are declared with signal.
-
-to print a type (convert to string): {type}'image(var)
-

@@ -52,7 +52,7 @@ architecture arch of stackmachine0 is
     signal main_adder_op : adder_op_t;
     signal main_adder_sum : std_logic_vector(31 downto 0);
 
-    -- -- pcadder in
+    -- pcadder in
     -- signal pcadder_in : std_logic_vector(31 downto 0);
     -- -- pcadder sum
     -- signal pcadder_out : std_logic_vector(31 downto 0);
@@ -163,8 +163,34 @@ begin
             stack_op <= STACK_PUSH;
             stack_enable <= '1';
             imem_enable <= '0';
-            main_adder_a <= pop_value_m2;
+            main_adder_a <= stack_data_out;
             main_adder_b <= pop_value_m1;
+            main_adder_op <= ADDER_ADD;
+        -- OP_IPRINT
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPRINT then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_POP;
+            stack_enable <= '1';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IPRINT then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= (others => '0');
+            main_adder_b <= (others => '0');
+            main_adder_op <= ADDER_ADD;
+        -- OP_BRANCH
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH then
+            stack_data_in <= (others => '0');
+            stack_op <= STACK_PEEK;
+            stack_enable <= '0';
+            imem_enable <= '0';
+            main_adder_a <= std_logic_vector(resize(unsigned(pc), 32));
+            main_adder_b <= saved_imem_offset1;
             main_adder_op <= ADDER_ADD;
         end if;
     end process;
@@ -263,7 +289,7 @@ begin
                 saved_imem_offset1 <= saved_imem_offset1;
                 saved_imem_offset2 <= saved_imem_offset2;
                 saved_imem_offset3 <= saved_imem_offset3;
-                pop_value_m1 <= stack_data_out;
+                pop_value_m1 <= (others => '0');
                 pop_value_m2 <= (others => '0');
             elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IADD then
                 -- outputs
@@ -276,14 +302,56 @@ begin
                 saved_imem_offset1 <= saved_imem_offset1;
                 saved_imem_offset2 <= saved_imem_offset2;
                 saved_imem_offset3 <= saved_imem_offset3;
-                pop_value_m1 <= pop_value_m1;
-                pop_value_m2 <= stack_data_out;
+                pop_value_m1 <= stack_data_out;
+                pop_value_m2 <= (others => '0');
             elsif state = STATE_EXEC3 and saved_imem_offset0 = OP_IADD then
                 -- outputs
                 data_out <= (others => '0');
                 data_out_valid <= '0';
                 -- internals
                 pc <= std_logic_vector(signed(pc) + 1);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_IPRINT
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_IPRINT then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= pc;
+                state <= STATE_EXEC2;
+                saved_imem_offset0 <= saved_imem_offset0;
+                saved_imem_offset1 <= saved_imem_offset1;
+                saved_imem_offset2 <= saved_imem_offset2;
+                saved_imem_offset3 <= saved_imem_offset3;
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            elsif state = STATE_EXEC2 and saved_imem_offset0 = OP_IPRINT then
+                -- outputs
+                report integer'image(to_integer(signed(stack_data_out))) severity note;
+                data_out <= stack_data_out;
+                data_out_valid <= '1';
+                -- internals
+                pc <= std_logic_vector(signed(pc) + 1);
+                state <= STATE_FETCH;
+                saved_imem_offset0 <= (others => '0');
+                saved_imem_offset1 <= (others => '0');
+                saved_imem_offset2 <= (others => '0');
+                saved_imem_offset3 <= (others => '0');
+                pop_value_m1 <= (others => '0');
+                pop_value_m2 <= (others => '0');
+            -- OP_BRANCH
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_BRANCH then
+                -- outputs
+                data_out <= (others => '0');
+                data_out_valid <= '0';
+                -- internals
+                pc <= main_adder_sum(ADDR_WIDTH-1 downto 0);
                 state <= STATE_FETCH;
                 saved_imem_offset0 <= (others => '0');
                 saved_imem_offset1 <= (others => '0');
