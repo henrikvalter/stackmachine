@@ -5,7 +5,7 @@ use work.mypkg.all;
 
 entity stackmachine0 is
     generic (
-        MEMFILE: string := "programs/empty.mif";
+        MEMFILE: string := "build/pgm.mif";
         ADDR_WIDTH: natural := 12;
         DATA_WIDTH: natural := 32
     );
@@ -125,8 +125,8 @@ begin
             main_adder_b <= (others => '0');
             main_adder_op <= ADDER_ADD;
             exit_flag <= '0';
-        -- OP_EMPTY
-        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EMPTY then
+        -- OP_NOP
+        elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_NOP then
             stack_data_in <= (others => '0');
             stack_op <= STACK_PEEK;
             stack_enable <= '0';
@@ -344,8 +344,8 @@ begin
                 saved_imem_offset3 <= imem_data_out_offset3;
                 pop_value_m1 <= (others => '0');
                 pop_value_m2 <= (others => '0');
-            -- OP_EMPTY
-            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_EMPTY then
+            -- OP_NOP
+            elsif state = STATE_EXEC1 and saved_imem_offset0 = OP_NOP then
                 -- outputs
                 data_out <= (others => '0');
                 data_out_valid <= '0';
@@ -585,5 +585,3 @@ begin
         end if;
     end process;
 end;
-
-

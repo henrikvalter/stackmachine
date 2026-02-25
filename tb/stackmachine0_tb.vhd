@@ -8,7 +8,7 @@ entity stackmachine0_tb is
 end;
 
 architecture arch of stackmachine0_tb is
-    constant MEMFILE: string := "programs/count_to_100.mif";
+    constant MEMFILE: string := "build/pgm.mif";
     constant ADDR_WIDTH: natural := 12;
     constant DATA_WIDTH: natural := 32;
 
@@ -33,14 +33,14 @@ begin
     );
     stimulus_process: process
     begin
-        clk <= '0'; 
+        clk <= '0';
         reset <= '1';
         wait for 1 ns;
         -- Rising edge
-        clk <= '1'; 
+        clk <= '1';
         wait for 1 ns;
         -- Falling edge
-        clk <= '0'; 
+        clk <= '0';
         reset <= '0';
 
         for i in 1 to 10000 loop

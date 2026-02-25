@@ -8,7 +8,7 @@ entity imem_tb is
 end;
 
 architecture arch of imem_tb is
-    constant MEMFILE: string := "programs/simple.mif";
+    constant MEMFILE: string := "build/pgm.mif";
     constant ADDR_WIDTH: natural := 8;
     constant DATA_WIDTH: natural := 32;
     signal clk : std_logic;
@@ -38,14 +38,14 @@ begin
     );
     stimulus_process: process
     begin
-        clk <= '0'; 
+        clk <= '0';
         reset <= '1';
         wait for 1 ns;
         -- Rising edge
-        clk <= '1'; 
+        clk <= '1';
         wait for 1 ns;
         -- Falling edge
-        clk <= '0'; 
+        clk <= '0';
         reset <= '0';
 
         for i in 0 to 10 loop

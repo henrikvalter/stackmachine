@@ -10,7 +10,7 @@ use ieee.std_logic_textio.all;
 
 entity imem is
     generic (
-        MEMFILE: string := "programs/simple.mif";
+        MEMFILE: string := "build/pgm.mif";
         ADDR_WIDTH: natural := 8;
         DATA_WIDTH: natural := 32
     );
@@ -77,7 +77,3 @@ begin
         end if;
     end process;
 end;
-
-
-
-

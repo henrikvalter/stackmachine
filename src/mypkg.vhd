@@ -15,7 +15,7 @@ package mypkg is
 
     subtype instruction_t is std_logic_vector(31 downto 0);
     -- Opcodes (32-bit constants)
-    constant OP_EMPTY               : instruction_t := x"00000000";
+    constant OP_NOP                 : instruction_t := x"00000000";
     constant OP_IPUSH               : instruction_t := x"00000001";
     constant OP_IADD                : instruction_t := x"00000002";
     constant OP_IPRINT              : instruction_t := x"00000003";
