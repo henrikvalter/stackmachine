@@ -1,0 +1,23 @@
+
+-- A program is a sequence of primitives.
+PDefs. Pgm ::= [Primitive];
+separator Primitive "";
+
+-- A primitive is either an instruction or a label.
+PInst. Primitive ::= Instruction;
+PLabel. Primitive ::= Label ":";
+
+-- Labels
+Llabel.    Label ::= Ident ":";
+
+
+-- Instructions
+Inop.      Instruction ::= "nop";
+Iipush.    Instruction ::= "ipush" Integer;
+Iiadd.     Instruction ::= "iadd";
+Iiprint.   Instruction ::= "iprint";
+Ibranch.   Instruction ::= "branch";
+Idup.      Instruction ::= "dup";
+Ibeq.      Instruction ::= "branch_if_equal" Label;
+Ibne.      Instruction ::= "branch_if_not_equal" Label;
+Iexit.     Instruction ::= "exit";
