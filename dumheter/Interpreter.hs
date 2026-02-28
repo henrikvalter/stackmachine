@@ -1,136 +1,163 @@
 
 import Asmlang.Abs as Abs
-import Control.Monad.State
+import Data.Map
 
-example_program :: [Primitive]
-example_program = [
-    -- PInst $ Iipush 100,
-    -- PInst $ Iipush 22,
-    -- PInst $ Iiadd,
-    -- PInst $ Iiprint,
-    -- PInst $ Iexit
-    PInst $ Iipush 100,
-    PInst $ Iipush 200,
-    PInst $ Iipush 300,
-    PInst $ Iiadd,
-    PInst $ Iiadd,
-    -- PInst $ Iiadd,
+program_count_to_100 :: [Primitive]
+program_count_to_100 = [
+    PInst $ Iipush 0,
+    PLabel $ Llabel $ Ident "LOOP",
+    PInst $ Idup,
     PInst $ Iiprint,
+    PInst $ Iipush 1,
+    PInst $ Iiadd,
+    PInst $ Idup,
+    PInst $ Iipush 100,
+    PInst $ Ibne $ Llabel $ Ident "LOOP",
     PInst $ Iexit
     ]
 
+program_branch :: [Primitive]
+program_branch = [
+    PLabel $ Llabel $ Ident "START",
+    PInst $ Iipush 3,
+    PInst $ Iiprint,
+    PInst $ Ibranch $ Llabel $ Ident "START",
+    PInst $ Iexit
+    ]
+
+example_program :: [Primitive]
+example_program = program_count_to_100
+
 type Stack a = [a]
-push :: Stack a -> a -> Stack a
-push s a = a : s
-pop :: Stack a -> Maybe (a, Stack a)
-pop [] = Nothing
-pop (a:as) = Just (a, as)
 
 data Env = Env {
-    program :: [Primitive],
+    program_map :: Map Integer Primitive,
+    label_map :: Map Label Integer,
     pc :: Integer,
     stack :: Stack Integer,
     output :: [String],
     timeout :: Integer
 } deriving Show
 
-fetch :: Integer -> [Primitive] -> Maybe Primitive
-fetch pc pgm | (fromInteger pc) < length pgm = Just (pgm !! (fromInteger pc))
-             | otherwise = Nothing
+make_label_map :: [Primitive] -> Either String (Map Label Integer)
+make_label_map primitives = helper primitives 0 empty where
+    helper :: [Primitive] -> Integer -> Map Label Integer -> Either String (Map Label Integer)
+    helper [] _ lmap = Right lmap
+    helper ((PInst _):ps) idx lmap = helper ps (idx+1) lmap
+    helper ((PLabel l):ps) idx lmap =
+        if member l lmap then
+            Left $ "Duplicate label " ++ show l
+        else
+            helper ps (idx+1) (insert l idx lmap)
 
-emptyEnv :: [Primitive] -> Integer -> Env
-emptyEnv primitives timeout =
-    Env { program = primitives
-        , pc = 0
-        , stack = []
-        , output = []
-        , timeout = timeout
-        }
+make_program_map :: [Primitive] -> Map Integer Primitive
+make_program_map primitives = fromList $ zip ([0..(toInteger (length primitives)-1)]) primitives
+
+empty_env :: [Primitive] -> Integer -> Either String Env
+empty_env primitives timeout =
+    case make_label_map primitives of
+        Left err -> Left err
+        Right lmap ->
+            Right (Env
+                { program_map = make_program_map primitives
+                , label_map = lmap
+                , pc = 0
+                , stack = []
+                , output = []
+                , timeout = timeout
+                })
+
+fetch :: Env -> Either String Primitive
+fetch env =
+    case Data.Map.lookup (pc env) (program_map env) of
+        Nothing -> Left "Fetch error"
+        Just primitive -> Right primitive
+
+lookup_label :: Env -> Label -> Either String Integer
+lookup_label env label =
+    case Data.Map.lookup label (label_map env) of
+        Nothing -> Left "Label lookup error"
+        Just address -> Right address
+
+assert_stack_size_geq :: Stack a -> Int -> Either String (Stack a)
+assert_stack_size_geq stack size =
+    if length stack < size then
+        Left "Stack error"
+    else
+        Right stack
 
 interpret :: Env -> Either String Env
 interpret env =
     case timeout env of
         0 -> Right env {output = output env ++ ["timeout"]}
         _ ->
-            case fetch (pc env') (program env') of
-                Nothing -> Left "Fetch error"
-                Just primitive ->
+            case fetch env' of
+                Left err -> Left err
+                Right primitive ->
                     case primitive of
                         PLabel _ -> interpret (env' {pc = pc env' + 1})
                         PInst Inop -> interpret (env' {pc = pc env' + 1})
                         PInst (Iipush i) ->
                             interpret (env' {
                                 pc = pc env' + 1,
-                                stack = push (stack env') i
+                                stack = i : stack env'
                                 })
-                        PInst Iiadd ->
-                            if length (stack env') < 2 then
-                                Left "Stack error"
-                            else
-                                interpret (env' {
-                                    pc = pc env' + 1,
-                                    stack = push (drop 2 (stack env')) ((stack env' !! 1) + (stack env' !! 0))
-                                    })
-                        PInst Iiprint ->
-                            if length (stack env') < 1 then
-                                Left "Stack error"
-                            else
-                                interpret (env' {
-                                    pc = pc env' + 1,
-                                    stack = tail (stack env'),
-                                    output = output env' ++ [show (head (stack env'))]
-                                    })
-                        -- ...
+                        PInst Iiadd -> do
+                            stack' <- assert_stack_size_geq (stack env') 2
+                            interpret (env' {
+                                pc = pc env' + 1,
+                                stack = ((stack env' !! 1) + (stack env' !! 0)) : (Prelude.drop 2 (stack env'))
+                                })
+                        PInst Iiprint -> do
+                            stack' <- assert_stack_size_geq (stack env') 1
+                            interpret (env' {
+                                pc = pc env' + 1,
+                                stack = tail (stack env'),
+                                output = output env' ++ [show (head (stack env'))]
+                                })
+                        PInst (Ibranch label) -> do
+                            address <- lookup_label env' label
+                            interpret (env' {pc = address})
+                        PInst Idup -> do
+                            stack' <- assert_stack_size_geq (stack env') 1
+                            interpret (env' {
+                                pc = pc env' + 1,
+                                stack = (head (stack env')) : (stack env')
+                                })
+                        PInst (Ibeq label) -> do
+                            stack' <- assert_stack_size_geq (stack env') 1
+                            label_address <- lookup_label env' label
+                            let chosen_address =
+                                    if (stack env' !! 1) == (stack env' !! 0) then
+                                        label_address
+                                    else
+                                        pc env' + 1
+                            interpret (env' {
+                                pc = chosen_address,
+                                stack = Prelude.drop 2 (stack env')
+                                })
+                        PInst (Ibne label) -> do
+                            stack' <- assert_stack_size_geq (stack env') 1
+                            label_address <- lookup_label env' label
+                            let chosen_address =
+                                    if (stack env' !! 1) /= (stack env' !! 0) then
+                                        label_address
+                                    else
+                                        pc env' + 1
+                            interpret (env' {
+                                pc = chosen_address,
+                                stack = Prelude.drop 2 (stack env')
+                                })
                         PInst Iexit -> Right env'
     where
         env' = env {timeout = timeout env - 1}
 
 
-    --     case maybe_primitive of
-    --         Nothing -> Left "fetch error"
-    --         Just primitive -> do
-    --             let newEnv =
-    --                 case primitive of
-    --                 PInst (Inop) -> env {pc = (pc env + 1)}
-    --                 _ -> env
-    --             Left "!?"
-
-
---     let prim = program env !! pc
-
-    -- PInst (Inop) -> interpretPrims env ps
-    -- PInst (Iipush i) -> do
-    --     let stack0 = stack env
-    --     let env1 = env {stack = stack0}
-    --     interpretPrims env1 ps
-
-    -- PInst (Iipush i) -> do
-    --     stack <- stack_get
-    --     stack_put (stack_push stack i)
-    --     return ""
-    -- PInst (Iiadd) -> do
-    --     stack <- stack_get
-    --     a <- stack_pop
-    --     b <- stack_pop
-    --     stack_put (stack_push stack (a+b))
-
-
-    -- | Iiadd
-    -- | Iiprint
-    -- | Ibranch
-    -- | Idup
-    -- | Ibeq Label
-    -- | Ibne Label
-    -- | Iexit
-
-    -- helper (p:ps) = case p of
-    --     PInst (Inop) -> helper ps
-    --     _ -> Nothing
-
---interpret :: Abs.Pgm -> Maybe [String]
---interpret (PDefs prims) = interpretPrims prims
 
 main =
-    case interpret (emptyEnv example_program 100) of
-        Left s -> putStrLn s
-        Right env -> putStrLn $ show env
+    case (empty_env example_program 1000) of
+        Left err -> putStrLn $ err
+        Right env ->
+            case interpret env of
+                Left err -> putStrLn err
+                Right env -> putStrLn $ show env

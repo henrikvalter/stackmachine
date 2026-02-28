@@ -162,7 +162,7 @@ instance Print Asmlang.Abs.Instruction where
     Asmlang.Abs.Iipush n -> prPrec i 0 (concatD [doc (showString "ipush"), prt 0 n])
     Asmlang.Abs.Iiadd -> prPrec i 0 (concatD [doc (showString "iadd")])
     Asmlang.Abs.Iiprint -> prPrec i 0 (concatD [doc (showString "iprint")])
-    Asmlang.Abs.Ibranch -> prPrec i 0 (concatD [doc (showString "branch")])
+    Asmlang.Abs.Ibranch label -> prPrec i 0 (concatD [doc (showString "branch"), prt 0 label])
     Asmlang.Abs.Idup -> prPrec i 0 (concatD [doc (showString "dup")])
     Asmlang.Abs.Ibeq label -> prPrec i 0 (concatD [doc (showString "branch_if_equal"), prt 0 label])
     Asmlang.Abs.Ibne label -> prPrec i 0 (concatD [doc (showString "branch_if_not_equal"), prt 0 label])

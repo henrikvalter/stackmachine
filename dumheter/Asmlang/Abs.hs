@@ -24,7 +24,7 @@ data Instruction
     | Iipush Integer
     | Iiadd
     | Iiprint
-    | Ibranch
+    | Ibranch Label
     | Idup
     | Ibeq Label
     | Ibne Label

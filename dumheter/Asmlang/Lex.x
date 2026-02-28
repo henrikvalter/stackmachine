@@ -32,6 +32,9 @@ $u = [. \n]          -- universal: any character
 
 :-
 
+-- Line comment ";"
+";" [.]* ;
+
 -- Whitespace (skipped)
 $white+ ;
 

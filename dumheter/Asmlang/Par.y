@@ -73,7 +73,7 @@ Instruction
   | 'ipush' Integer { Asmlang.Abs.Iipush $2 }
   | 'iadd' { Asmlang.Abs.Iiadd }
   | 'iprint' { Asmlang.Abs.Iiprint }
-  | 'branch' { Asmlang.Abs.Ibranch }
+  | 'branch' Label { Asmlang.Abs.Ibranch $2 }
   | 'dup' { Asmlang.Abs.Idup }
   | 'branch_if_equal' Label { Asmlang.Abs.Ibeq $2 }
   | 'branch_if_not_equal' Label { Asmlang.Abs.Ibne $2 }

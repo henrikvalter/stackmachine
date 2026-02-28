@@ -38,7 +38,7 @@ transInstruction x = case x of
   Asmlang.Abs.Iipush integer -> failure x
   Asmlang.Abs.Iiadd -> failure x
   Asmlang.Abs.Iiprint -> failure x
-  Asmlang.Abs.Ibranch -> failure x
+  Asmlang.Abs.Ibranch label -> failure x
   Asmlang.Abs.Idup -> failure x
   Asmlang.Abs.Ibeq label -> failure x
   Asmlang.Abs.Ibne label -> failure x
