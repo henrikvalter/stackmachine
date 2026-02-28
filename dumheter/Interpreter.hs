@@ -1,4 +1,6 @@
 
+module Interpreter(interpret) where
+
 import Asmlang.Abs as Abs
 import Data.Map
 
@@ -40,8 +42,8 @@ program_branch = [
     PInst $ Iexit
     ]
 
-example_program :: [Primitive]
-example_program = program_count_to_100
+example_program :: Pgm
+example_program = PDefs program_count_to_100
 
 type Stack a = [a]
 
@@ -68,8 +70,8 @@ make_label_map primitives = helper primitives 0 empty where
 make_program_map :: [Primitive] -> Map Integer Primitive
 make_program_map primitives = fromList $ zip ([0..(toInteger (length primitives)-1)]) primitives
 
-empty_env :: [Primitive] -> Integer -> Either String Env
-empty_env primitives timeout =
+empty_env :: Pgm -> Integer -> Either String Env
+empty_env (PDefs primitives) timeout =
     case make_label_map primitives of
         Left err -> Left err
         Right lmap ->
@@ -101,8 +103,8 @@ assert_stack_size_geq stack size =
     else
         Right stack
 
-interpret :: Env -> Either String Env
-interpret env =
+interpret' :: Env -> Either String Env
+interpret' env =
     case timeout env of
         0 -> Right env {output = output env ++ ["timeout"]}
         _ ->
@@ -110,32 +112,32 @@ interpret env =
                 Left err -> Left err
                 Right primitive ->
                     case primitive of
-                        PLabel _ -> interpret (env' {pc = pc env' + 1})
-                        PInst Inop -> interpret (env' {pc = pc env' + 1})
+                        PLabel _ -> interpret' (env' {pc = pc env' + 1})
+                        PInst Inop -> interpret' (env' {pc = pc env' + 1})
                         PInst (Iipush i) ->
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = pc env' + 1,
                                 stack = i : stack env'
                                 })
                         PInst Iiadd -> do
                             assert_stack_size_geq (stack env') 2
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = pc env' + 1,
                                 stack = ((stack env' !! 1) + (stack env' !! 0)) : (Prelude.drop 2 (stack env'))
                                 })
                         PInst Iiprint -> do
                             assert_stack_size_geq (stack env') 1
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = pc env' + 1,
                                 stack = tail (stack env'),
                                 output = output env' ++ [show (head (stack env'))]
                                 })
                         PInst (Ibranch label) -> do
                             address <- lookup_label env' label
-                            interpret (env' {pc = address})
+                            interpret' (env' {pc = address})
                         PInst Idup -> do
                             assert_stack_size_geq (stack env') 1
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = pc env' + 1,
                                 stack = (head (stack env')) : (stack env')
                                 })
@@ -147,7 +149,7 @@ interpret env =
                                         label_address
                                     else
                                         pc env' + 1
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = chosen_address,
                                 stack = Prelude.drop 2 (stack env')
                                 })
@@ -159,7 +161,7 @@ interpret env =
                                         label_address
                                     else
                                         pc env' + 1
-                            interpret (env' {
+                            interpret' (env' {
                                 pc = chosen_address,
                                 stack = Prelude.drop 2 (stack env')
                                 })
@@ -167,10 +169,14 @@ interpret env =
     where
         env' = env {timeout = timeout env - 1}
 
-main =
-    case (empty_env example_program 1000) of
+interpret :: Pgm -> Integer -> Either String [String]
+interpret pgm timeout = do
+    initial_env <- empty_env pgm timeout
+    final_env <- interpret' initial_env
+    return (output final_env)
+
+main = do
+    case interpret example_program 1000 of
         Left err -> putStrLn $ err
-        Right env ->
-            case interpret env of
-                Left err -> putStrLn err
-                Right env -> putStrLn $ show env
+        Right result -> do
+            putStrLn $ show result

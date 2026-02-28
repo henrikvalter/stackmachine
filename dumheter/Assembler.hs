@@ -1,3 +1,4 @@
+module Assembler (assemble) where
 
 import Asmlang.Abs as Abs
 import Data.Map
@@ -108,9 +109,7 @@ assemble pgm = do
     (eolmap, lmap) <- first_pass pgm
     second_pass eolmap lmap
 
-main =
-    case assemble (PDefs program_count_to_100) of
-        Left err -> putStrLn err
-        Right machine_code_lines -> putStrLn $ unlines machine_code_lines
-
-    -- putStrLn $ show $ assemble (PDefs program_count_to_100)
+-- main =
+--     case assemble (PDefs program_count_to_100) of
+--         Left err -> putStrLn err
+--         Right machine_code_lines -> putStrLn $ unlines machine_code_lines
