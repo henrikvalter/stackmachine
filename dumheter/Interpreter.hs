@@ -16,6 +16,21 @@ program_count_to_100 = [
     PInst $ Iexit
     ]
 
+program_stack_error :: [Primitive]
+program_stack_error = [
+    PInst $ Iipush 5,
+    PInst $ Iiadd,
+    PInst $ Iexit
+    ]
+
+program_stack_error2 :: [Primitive]
+program_stack_error2 = [
+    PLabel $ Llabel $ Ident "START",
+    PInst $ Iipush 5,
+    PInst $ Ibne $ Llabel $ Ident "START",
+    PInst $ Iexit
+    ]
+
 program_branch :: [Primitive]
 program_branch = [
     PLabel $ Llabel $ Ident "START",
@@ -103,13 +118,13 @@ interpret env =
                                 stack = i : stack env'
                                 })
                         PInst Iiadd -> do
-                            stack' <- assert_stack_size_geq (stack env') 2
+                            assert_stack_size_geq (stack env') 2
                             interpret (env' {
                                 pc = pc env' + 1,
                                 stack = ((stack env' !! 1) + (stack env' !! 0)) : (Prelude.drop 2 (stack env'))
                                 })
                         PInst Iiprint -> do
-                            stack' <- assert_stack_size_geq (stack env') 1
+                            assert_stack_size_geq (stack env') 1
                             interpret (env' {
                                 pc = pc env' + 1,
                                 stack = tail (stack env'),
@@ -119,13 +134,13 @@ interpret env =
                             address <- lookup_label env' label
                             interpret (env' {pc = address})
                         PInst Idup -> do
-                            stack' <- assert_stack_size_geq (stack env') 1
+                            assert_stack_size_geq (stack env') 1
                             interpret (env' {
                                 pc = pc env' + 1,
                                 stack = (head (stack env')) : (stack env')
                                 })
                         PInst (Ibeq label) -> do
-                            stack' <- assert_stack_size_geq (stack env') 1
+                            assert_stack_size_geq (stack env') 2
                             label_address <- lookup_label env' label
                             let chosen_address =
                                     if (stack env' !! 1) == (stack env' !! 0) then
@@ -137,7 +152,7 @@ interpret env =
                                 stack = Prelude.drop 2 (stack env')
                                 })
                         PInst (Ibne label) -> do
-                            stack' <- assert_stack_size_geq (stack env') 1
+                            assert_stack_size_geq (stack env') 2
                             label_address <- lookup_label env' label
                             let chosen_address =
                                     if (stack env' !! 1) /= (stack env' !! 0) then
