@@ -1,7 +1,11 @@
 
+Assembler: Assembler.hs Abs.hs
+	ghc Assembler.hs -o a.out
+	./a.out
+
 Interpreter: Interpreter.hs Abs.hs
-	ghc Interpreter.hs
-	./Interpreter
+	ghc Interpreter.hs -o a.out
+	./a.out
 
 clean:
-	rm Interpreter.o Interpreter.hi Interpreter
+	rm *.o *.hi *.out

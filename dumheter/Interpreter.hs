@@ -167,8 +167,6 @@ interpret env =
     where
         env' = env {timeout = timeout env - 1}
 
-
-
 main =
     case (empty_env example_program 1000) of
         Left err -> putStrLn $ err
