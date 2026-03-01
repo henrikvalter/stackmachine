@@ -27,7 +27,7 @@ run_vhdl_testbench assembly_lines = do
     return (parse_lines (lines output))
 
 main =
-    case assemble program_count_to_100 of
+    case assemble program_fibonacci of
         Left err -> putStrLn err
         Right assembly_lines -> do
             result <- run_vhdl_testbench assembly_lines

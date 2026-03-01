@@ -13,6 +13,7 @@ module Asmlang.Par
   , pPrimitive
   , pLabel
   , pInstruction
+  , pAddress
   ) where
 
 import Prelude
@@ -27,6 +28,7 @@ import Asmlang.Lex
 %name pPrimitive Primitive
 %name pLabel Label
 %name pInstruction Instruction
+%name pAddress Address
 -- no lexer declaration
 %monad { Err } { (>>=) } { return }
 %tokentype {Token}
@@ -38,9 +40,11 @@ import Asmlang.Lex
   'dup'                 { PT _ (TS _ 5)  }
   'exit'                { PT _ (TS _ 6)  }
   'iadd'                { PT _ (TS _ 7)  }
-  'iprint'              { PT _ (TS _ 8)  }
-  'ipush'               { PT _ (TS _ 9)  }
-  'nop'                 { PT _ (TS _ 10) }
+  'iload'               { PT _ (TS _ 8)  }
+  'iprint'              { PT _ (TS _ 9)  }
+  'ipush'               { PT _ (TS _ 10) }
+  'istore'              { PT _ (TS _ 11) }
+  'nop'                 { PT _ (TS _ 12) }
   L_Ident               { PT _ (TV $$)   }
   L_integ               { PT _ (TI $$)   }
 
@@ -77,7 +81,12 @@ Instruction
   | 'dup' { Asmlang.Abs.Idup }
   | 'branch_if_equal' Label { Asmlang.Abs.Ibeq $2 }
   | 'branch_if_not_equal' Label { Asmlang.Abs.Ibne $2 }
+  | 'iload' Address { Asmlang.Abs.Iiload $2 }
+  | 'istore' Address { Asmlang.Abs.Iistore $2 }
   | 'exit' { Asmlang.Abs.Iexit }
+
+Address :: { Asmlang.Abs.Address }
+Address : Integer { Asmlang.Abs.Aaddress $1 }
 
 {
 

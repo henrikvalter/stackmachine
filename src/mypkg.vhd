@@ -23,6 +23,8 @@ package mypkg is
     constant OP_DUP                 : instruction_t := x"00000005";
     constant OP_BRANCH_IF_EQUAL     : instruction_t := x"00000006";
     constant OP_BRANCH_IF_NOT_EQUAL : instruction_t := x"00000007";
+    constant OP_ILOAD               : instruction_t := x"00000008";
+    constant OP_ISTORE              : instruction_t := x"00000009";
     constant OP_EXIT                : instruction_t := x"FFFFFFFF";
 
     type stackmachine_state_t is (

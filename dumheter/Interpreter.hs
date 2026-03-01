@@ -12,6 +12,7 @@ data Env = Env {
     label_map :: Map Label Integer,
     pc :: Integer,
     stack :: Stack Integer,
+    datamem :: Map Address Integer,
     output :: [String],
     timeout :: Integer
 } deriving Show
@@ -40,6 +41,7 @@ empty_env (PDefs primitives) timeout =
                 , label_map = lmap
                 , pc = 0
                 , stack = []
+                , datamem = empty
                 , output = []
                 , timeout = timeout
                 })
@@ -49,6 +51,16 @@ fetch env =
     case Data.Map.lookup (pc env) (program_map env) of
         Nothing -> Left "Fetch error"
         Just primitive -> Right primitive
+
+datamem_load :: Env -> Address -> Either String Integer
+datamem_load env address =
+    case Data.Map.lookup address (datamem env) of
+        Nothing -> Left "datamem load failure"
+        Just content -> Right content
+
+datamem_store :: Env -> Address -> Integer -> Env
+datamem_store env address content =
+    env {datamem = insert address content (datamem env)}
 
 lookup_label :: Env -> Label -> Either String Integer
 lookup_label env label =
@@ -125,6 +137,18 @@ interpret' env =
                                 pc = chosen_address,
                                 stack = Prelude.drop 2 (stack env')
                                 })
+                        PInst (Iiload address) -> do
+                            content <- datamem_load env' address
+                            interpret' (env' {
+                                pc = pc env' + 1,
+                                stack = content : (stack env')
+                                })
+                        PInst (Iistore address) -> do
+                            let env'' = datamem_store env' address (head (stack env'))
+                            interpret' (env'' {
+                                pc = pc env'' + 1,
+                                stack = tail (stack env'')
+                                })
                         PInst Iexit -> Right env'
     where
         env' = env {timeout = timeout env - 1}
@@ -136,7 +160,7 @@ interpret pgm timeout = do
     return (output final_env)
 
 main = do
-    case interpret program_count_to_100 1000 of
+    case interpret program_fibonacci 1000 of
         Left err -> putStrLn $ err
         Right result -> do
             putStrLn $ show result

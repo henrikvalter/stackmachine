@@ -4,12 +4,11 @@ PDefs. Pgm ::= [Primitive];
 separator Primitive "";
 
 -- A primitive is either an instruction or a label.
-PInst. Primitive ::= Instruction;
-PLabel. Primitive ::= Label ":";
+PInst. Primitive        ::= Instruction;
+PLabel. Primitive       ::= Label ":";
 
 -- Labels
-Llabel.    Label ::= Ident ":";
-
+Llabel.    Label        ::= Ident ":";
 
 -- Instructions
 Inop.      Instruction ::= "nop";
@@ -20,6 +19,10 @@ Ibranch.   Instruction ::= "branch" Label;
 Idup.      Instruction ::= "dup";
 Ibeq.      Instruction ::= "branch_if_equal" Label;
 Ibne.      Instruction ::= "branch_if_not_equal" Label;
+Iiload.    Instruction ::= "iload" Address;
+Iistore.   Instruction ::= "istore" Address;
 Iexit.     Instruction ::= "exit";
+
+Aaddress.  Address ::= Integer;
 
 comment ";" ;

@@ -34,6 +34,9 @@ eolmap_insert emap eol = emap {eolmap = insert (next emap) eol (eolmap emap), ne
 label2string :: Label -> String
 label2string (Llabel (Ident s)) = s
 
+address2integer :: Address -> Integer
+address2integer (Aaddress i) = i
+
 first_pass :: Pgm -> Either String (EOLMap, Map Label Integer)
 first_pass (PDefs primitives) = helper primitives empty_eolmap empty where
     helper :: [Primitive] -> EOLMap -> Map Label Integer -> Either String (EOLMap, Map Label Integer)
@@ -67,12 +70,20 @@ first_pass (PDefs primitives) = helper primitives empty_eolmap empty where
                     eolmap1 = eolmap_insert eolmap (EOLString $ (to_b32 0x5) ++ " -- dup")
             PInst (Ibeq label) ->
                 helper ps eolmap2 lmap where
-                    eolmap1 = eolmap_insert eolmap (EOLString $ (to_b32 0x6) ++ " -- branch to label " ++ label2string label ++ " if equal")
+                    eolmap1 = eolmap_insert eolmap  (EOLString $ (to_b32 0x6) ++ " -- branch to label " ++ label2string label ++ " if equal")
                     eolmap2 = eolmap_insert eolmap1 (EOLLabel label)
             PInst (Ibne label) ->
                 helper ps eolmap2 lmap where
-                    eolmap1 = eolmap_insert eolmap (EOLString $ (to_b32 0x7) ++ " -- branch to label " ++ label2string label ++ " if not equal")
+                    eolmap1 = eolmap_insert eolmap  (EOLString $ (to_b32 0x7) ++ " -- branch to label " ++ label2string label ++ " if not equal")
                     eolmap2 = eolmap_insert eolmap1 (EOLLabel label)
+            PInst (Iiload address) ->
+                helper ps eolmap2 lmap where
+                    eolmap1 = eolmap_insert eolmap  (EOLString $ (to_b32 0x8) ++ " -- iload " ++ show (address2integer address))
+                    eolmap2 = eolmap_insert eolmap1 (EOLString $ (to_b32 $ address2integer address))
+            PInst (Iistore address) ->
+                helper ps eolmap2 lmap where
+                    eolmap1 = eolmap_insert eolmap  (EOLString $ (to_b32 0x9) ++ " -- istore " ++ show (address2integer address))
+                    eolmap2 = eolmap_insert eolmap1 (EOLString $ (to_b32 $ address2integer address))
             PInst Iexit ->
                 helper ps eolmap1 lmap where
                     eolmap1 = eolmap_insert eolmap (EOLString $ (to_b32 (-1)) ++ " -- exit")

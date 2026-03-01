@@ -28,7 +28,12 @@ data Instruction
     | Idup
     | Ibeq Label
     | Ibne Label
+    | Iiload Address
+    | Iistore Address
     | Iexit
+  deriving (C.Eq, C.Ord, C.Show, C.Read)
+
+data Address = Aaddress Integer
   deriving (C.Eq, C.Ord, C.Show, C.Read)
 
 newtype Ident = Ident String

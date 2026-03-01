@@ -166,4 +166,10 @@ instance Print Asmlang.Abs.Instruction where
     Asmlang.Abs.Idup -> prPrec i 0 (concatD [doc (showString "dup")])
     Asmlang.Abs.Ibeq label -> prPrec i 0 (concatD [doc (showString "branch_if_equal"), prt 0 label])
     Asmlang.Abs.Ibne label -> prPrec i 0 (concatD [doc (showString "branch_if_not_equal"), prt 0 label])
+    Asmlang.Abs.Iiload address -> prPrec i 0 (concatD [doc (showString "iload"), prt 0 address])
+    Asmlang.Abs.Iistore address -> prPrec i 0 (concatD [doc (showString "istore"), prt 0 address])
     Asmlang.Abs.Iexit -> prPrec i 0 (concatD [doc (showString "exit")])
+
+instance Print Asmlang.Abs.Address where
+  prt i = \case
+    Asmlang.Abs.Aaddress n -> prPrec i 0 (concatD [prt 0 n])

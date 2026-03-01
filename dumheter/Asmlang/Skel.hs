@@ -42,4 +42,10 @@ transInstruction x = case x of
   Asmlang.Abs.Idup -> failure x
   Asmlang.Abs.Ibeq label -> failure x
   Asmlang.Abs.Ibne label -> failure x
+  Asmlang.Abs.Iiload address -> failure x
+  Asmlang.Abs.Iistore address -> failure x
   Asmlang.Abs.Iexit -> failure x
+
+transAddress :: Asmlang.Abs.Address -> Result
+transAddress x = case x of
+  Asmlang.Abs.Aaddress integer -> failure x

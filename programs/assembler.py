@@ -47,6 +47,18 @@ def parse_instruction(instruction_list : list, tokens):
             f"{to_32b(0x7)} -- branch to label \"{target_label}\" if not equal",
             f"__LABEL__{target_label}"
         ])
+    elif len(tokens) == 2 and tokens[0] == "iload":
+        address = int(tokens[1])
+        instruction_list.extend([
+            f"{to_32b(0x8)} -- iload {address}",
+            f"{to_32b(address)}"
+        ])
+    elif len(tokens) == 2 and tokens[0] == "istore":
+        address = int(tokens[1])
+        instruction_list.extend([
+            f"{to_32b(0x9)} -- istore {address}",
+            f"{to_32b(address)}"
+        ])
     elif len(tokens) == 1 and tokens[0] == "exit":
         instruction_list.extend([
             f"{to_32b(0xFFFFFFFF)} -- exit"

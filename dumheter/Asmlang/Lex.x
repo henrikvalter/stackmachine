@@ -151,11 +151,13 @@ eitherResIdent tv s = treeFind resWords
 -- | The keywords and symbols of the language organized as binary search tree.
 resWords :: BTree
 resWords =
-  b "exit" 6
-    (b "branch_if_equal" 3
-       (b "branch" 2 (b ":" 1 N N) N)
-       (b "dup" 5 (b "branch_if_not_equal" 4 N N) N))
-    (b "ipush" 9 (b "iprint" 8 (b "iadd" 7 N N) N) (b "nop" 10 N N))
+  b "iadd" 7
+    (b "branch_if_not_equal" 4
+       (b "branch" 2 (b ":" 1 N N) (b "branch_if_equal" 3 N N))
+       (b "exit" 6 (b "dup" 5 N N) N))
+    (b "ipush" 10
+       (b "iprint" 9 (b "iload" 8 N N) N)
+       (b "nop" 12 (b "istore" 11 N N) N))
   where
   b s n = B bs (TS bs n)
     where
