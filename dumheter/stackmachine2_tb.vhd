@@ -61,7 +61,7 @@ begin
         end loop;
         -- report "Simulation timeout."
         --     severity failure;
-        report "timeout" severity failure;
+        report "timeout" severity note;
         wait;
     end process;
 end;

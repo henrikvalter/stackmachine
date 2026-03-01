@@ -105,6 +105,6 @@ assemble pgm = do
     second_pass eolmap lmap
 
 main =
-    case assemble program_count_to_100 of
+    case assemble program_branch of
         Left err -> putStrLn err
         Right machine_code_lines -> putStrLn $ unlines machine_code_lines
