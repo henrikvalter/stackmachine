@@ -1,10 +1,5 @@
 
---module Test
---    ( output_match
---    , test_pgm
---    , unit_test
---    , run_unit_tests
---    ) where
+module Test where
 
 import Asmlang.Abs as Abs
 import Assembler
@@ -76,8 +71,11 @@ prop_pgm pgm = ioProperty $ do
 run_unit_tests :: IO ()
 run_unit_tests = mapM_ unit_test test_programs
 
-main :: IO ()
-main = do
+test_main :: IO ()
+test_main = do
     compile_vhdl_stackmachine
     run_unit_tests
     quickCheck prop_pgm
+
+-- main :: IO ()
+-- main = test_main

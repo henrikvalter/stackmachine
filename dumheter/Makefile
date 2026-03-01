@@ -21,5 +21,5 @@ Interpreter: Interpreter.hs Abs.hs
 	./a.out
 
 clean:
+	rm -f *.o *.hi *.out *.mif
 	./vhdl_clean.sh
-	rm *.o *.hi *.out *.asm

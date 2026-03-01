@@ -4,6 +4,4 @@ import Test
 import Vhdl_interface
 
 main :: IO ()
-main = do
-    compile_vhdl_stackmachine
-    run_unit_tests
+main = test_main
