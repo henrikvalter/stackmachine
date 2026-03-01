@@ -4,6 +4,7 @@ import Asmlang.Abs as Abs
 import Data.Map
 import Data.Bits
 import Data.Word
+import Programs
 
 to_b32 :: Integer -> String
 to_b32 n =
@@ -12,20 +13,6 @@ to_b32 n =
     ]
   where
     w = fromIntegral n :: Word32
-
-program_count_to_100 :: [Primitive]
-program_count_to_100 = [
-    PInst $ Iipush 0,
-    PLabel $ Llabel $ Ident "LOOP",
-    PInst $ Idup,
-    PInst $ Iiprint,
-    PInst $ Iipush 1,
-    PInst $ Iiadd,
-    PInst $ Idup,
-    PInst $ Iipush 100,
-    PInst $ Ibne $ Llabel $ Ident "LOOP",
-    PInst $ Iexit
-    ]
 
 data EOL = EOLString String | EOLLabel Label
     deriving (Show, Eq)
@@ -43,9 +30,6 @@ empty_eolmap = EOLMap
 
 eolmap_insert :: EOLMap -> EOL -> EOLMap
 eolmap_insert emap eol = emap {eolmap = insert (next emap) eol (eolmap emap), next = next emap + 1}
-
-example_program :: [Primitive]
-example_program = program_count_to_100
 
 label2string :: Label -> String
 label2string (Llabel (Ident s)) = s
@@ -109,7 +93,7 @@ assemble pgm = do
     (eolmap, lmap) <- first_pass pgm
     second_pass eolmap lmap
 
--- main =
---     case assemble (PDefs program_count_to_100) of
---         Left err -> putStrLn err
---         Right machine_code_lines -> putStrLn $ unlines machine_code_lines
+main =
+    case assemble program_count_to_100 of
+        Left err -> putStrLn err
+        Right machine_code_lines -> putStrLn $ unlines machine_code_lines

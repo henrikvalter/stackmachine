@@ -1,7 +1,11 @@
 
 
-Main: Abs.hs Vhdl_interface.hs Assembler.hs Interpreter.hs
+Main: Abs.hs Vhdl_interface.hs Assembler.hs Interpreter.hs Test.hs
 	ghc Main.hs -o a.out
+	./a.out
+
+Test: Abs.hs Vhdl_interface.hs Assembler.hs Interpreter.hs
+	ghc Test.hs -o a.out
 	./a.out
 
 Vhdl_interface: Vhdl_interface.hs Abs.hs Assembler.hs

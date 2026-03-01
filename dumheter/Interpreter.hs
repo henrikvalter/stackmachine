@@ -2,48 +2,8 @@
 module Interpreter(interpret) where
 
 import Asmlang.Abs as Abs
+import Programs
 import Data.Map
-
-program_count_to_100 :: [Primitive]
-program_count_to_100 = [
-    PInst $ Iipush 0,
-    PLabel $ Llabel $ Ident "LOOP",
-    PInst $ Idup,
-    PInst $ Iiprint,
-    PInst $ Iipush 1,
-    PInst $ Iiadd,
-    PInst $ Idup,
-    PInst $ Iipush 100,
-    PInst $ Ibne $ Llabel $ Ident "LOOP",
-    PInst $ Iexit
-    ]
-
-program_stack_error :: [Primitive]
-program_stack_error = [
-    PInst $ Iipush 5,
-    PInst $ Iiadd,
-    PInst $ Iexit
-    ]
-
-program_stack_error2 :: [Primitive]
-program_stack_error2 = [
-    PLabel $ Llabel $ Ident "START",
-    PInst $ Iipush 5,
-    PInst $ Ibne $ Llabel $ Ident "START",
-    PInst $ Iexit
-    ]
-
-program_branch :: [Primitive]
-program_branch = [
-    PLabel $ Llabel $ Ident "START",
-    PInst $ Iipush 3,
-    PInst $ Iiprint,
-    PInst $ Ibranch $ Llabel $ Ident "START",
-    PInst $ Iexit
-    ]
-
-example_program :: Pgm
-example_program = PDefs program_count_to_100
 
 type Stack a = [a]
 
@@ -176,7 +136,7 @@ interpret pgm timeout = do
     return (output final_env)
 
 main = do
-    case interpret example_program 1000 of
+    case interpret program_count_to_100 1000 of
         Left err -> putStrLn $ err
         Right result -> do
             putStrLn $ show result
