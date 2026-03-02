@@ -1,6 +1,6 @@
 #!/bin/bash
 
-UNIT="stackmachine2"
+source pick_the_right_machine.sh
 
 cd ..
 rm ${UNIT}_tb

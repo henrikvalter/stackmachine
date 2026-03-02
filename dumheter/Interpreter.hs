@@ -144,6 +144,7 @@ interpret' env =
                                 stack = content : (stack env')
                                 })
                         PInst (Iistore address) -> do
+                            assert_stack_size_geq (stack env') 1
                             let env'' = datamem_store env' address (head (stack env'))
                             interpret' (env'' {
                                 pc = pc env'' + 1,
