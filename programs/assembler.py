@@ -59,6 +59,26 @@ def parse_instruction(instruction_list : list, tokens):
             f"{to_32b(0x9)} -- istore {address}",
             f"{to_32b(address)}"
         ])
+    elif len(tokens) == 2 and tokens[0] == "call":
+        target_label = tokens[1]
+        instruction_list.extend([
+            f"{to_32b(0xA)} -- function call to label \"{target_label}\"",
+            f"__LABEL__{target_label}"
+        ])
+    elif len(tokens) == 1 and tokens[0] == "return":
+        instruction_list.extend([
+            f"{to_32b(0xB)} -- return"
+        ])
+    elif len(tokens) == 2 and tokens[0] == "pop":
+        amount = int(tokens[1])
+        instruction_list.extend([
+            f"{to_32b(0xC)} -- pop {amount}",
+            f"{to_32b(amount)}"
+        ])
+    elif len(tokens) == 1 and tokens[0] == "isub":
+        instruction_list.extend([
+            f"{to_32b(0xD)} -- isub"
+        ])
     elif len(tokens) == 1 and tokens[0] == "exit":
         instruction_list.extend([
             f"{to_32b(0xFFFFFFFF)} -- exit"

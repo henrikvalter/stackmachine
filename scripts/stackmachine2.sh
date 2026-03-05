@@ -1,7 +1,8 @@
 #!/bin/bash
 
 UNIT="stackmachine2"
-PROGRAM="fibonacci.asm"
+# PROGRAM="count_to_100.asm"
+PROGRAM="arisum.asm"
 
 mkdir -p build/
 python3 programs/assembler.py programs/${PROGRAM} build/pgm.mif

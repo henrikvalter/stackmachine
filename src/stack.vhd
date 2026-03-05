@@ -16,7 +16,8 @@ entity stack is
         op : in stack_op_t;
         enable : in std_logic;
         data_out : out std_logic_vector(DATA_WIDTH-1 downto 0);
-        stack_error : out std_logic
+        underflow : out std_logic;
+        overflow : out std_logic
     );
 end;
 
@@ -32,14 +33,14 @@ begin
     p1_adder: entity work.adder(rca)
         generic map(WIDTH => ADDR_WIDTH)
         port map (a => head,
-                  b => std_logic_vector(to_signed(1, ADDR_WIDTH)),
+                  b => std_logic_vector(to_unsigned(1, ADDR_WIDTH)),
                   op => ADDER_ADD,
                   s => head_p1,
                   cout => open);
     m1_adder: entity work.adder(rca)
         generic map(WIDTH => ADDR_WIDTH)
         port map (a => head,
-                  b => std_logic_vector(to_signed(1, ADDR_WIDTH)),
+                  b => std_logic_vector(to_unsigned(1, ADDR_WIDTH)),
                   op => ADDER_SUB,
                   s => head_m1,
                   cout => open);
@@ -50,44 +51,51 @@ begin
             if reset = '1' then
                 head <= (others => '0');
                 data_out <= (others => '0');
-                stack_error <= '0';
+                underflow <= '0';
+                overflow  <= '0';
             elsif enable='0' then
                 head <= head;
                 data_out <= (others => '0');
-                stack_error <= '0';
-            -- Trying to peek when head is 0 ==> Error
+                underflow <= '0';
+                overflow  <= '0';
+            -- Peeking the empty stack is not an error.
+            -- This definitely will not cause any bugs down the line.
             elsif op=STACK_PEEK and ((or head)='0') then
                 head <= head;
                 data_out <= (others => '0');
-                stack_error <= '1';
+                underflow <= '0';
+                overflow  <= '0';
             elsif op=STACK_PEEK then
                 head <= head;
                 data_out <= memory(to_integer(unsigned(head_m1)));
-                stack_error <= '0';
+                underflow <= '0';
+                overflow  <= '0';
             -- Trying to pop when head is 0 ==> Error
             elsif op=STACK_POP and ((or head)='0') then
                 head <= head;
                 data_out <= (others => '0');
-                stack_error <= '1';
+                underflow <= '1';
+                overflow  <= '0';
             elsif op=STACK_POP then
                 head <= head_m1;
                 data_out <= memory(to_integer(unsigned(head_m1)));
-                stack_error <= '0';
+                underflow <= '0';
+                overflow  <= '0';
             -- Trying to push when head is max ==> Error
             elsif op=STACK_PUSH and ((and head)='1') then
                 head <= head;
                 data_out <= (others => '0');
-                stack_error <= '1';
+                underflow <= '0';
+                overflow  <= '1';
             elsif op=STACK_PUSH then
                 head <= head_p1;
                 data_out <= (others => '0');
                 memory(to_integer(unsigned(head))) <= data_in;
-                stack_error <= '0';
+                underflow <= '0';
+                overflow  <= '0';
             -- Should never be reached
             else
-                head <= head;
-                data_out <= (others => '0');
-                stack_error <= '1';
+                report "Stack if-then-else fallthrough" severity failure;
             end if;
         end if;
     end process;
